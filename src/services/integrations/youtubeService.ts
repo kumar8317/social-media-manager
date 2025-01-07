@@ -1,14 +1,14 @@
-import { google } from 'googleapis';
+import { google, youtube_v3 } from 'googleapis';
 import fs from 'fs/promises';
+import { VideoMetadata } from '../../types/social';
 import { AppError } from '../../middleware/errorHandler';
-import { VideoMetadata } from '@/types/social';
 
 export class YouTubeService {
-  private youtube;
+  private youtube: youtube_v3.Youtube;
 
   constructor(private accessToken: string) {
     const auth = new google.auth.OAuth2();
-    auth.setCredentials({ access_token: accessToken });
+    auth.setCredentials({ access_token: this.accessToken });
     this.youtube = google.youtube({ version: 'v3', auth });
   }
 
@@ -22,10 +22,12 @@ export class YouTubeService {
           snippet: {
             title: metadata.title,
             description: metadata.description,
-            tags: metadata.tags
+            tags: metadata.tags,
+            categoryId: '22'
           },
           status: {
-            privacyStatus: metadata.privacyStatus || 'private'
+            privacyStatus: metadata.privacyStatus || 'private',
+            selfDeclaredMadeForKids: false
           }
         },
         media: {

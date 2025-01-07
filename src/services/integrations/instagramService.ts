@@ -8,18 +8,21 @@ export class InstagramService {
 
   constructor(private accessToken: string) {}
 
+  async refreshToken(): Promise<string> {
+    const response = await axios.get(`${this.baseUrl}/refresh_access_token`, {
+      params: {
+        access_token: this.accessToken,
+        grant_type: 'ig_refresh_token'
+      }
+    });
+    return response.data.access_token;
+  }
+
   async publishReel(filepath: string, caption: string): Promise<string> {
     try {
-      // 1. Create container
       const container = await this.createContainer(filepath, caption);
-
-      // 2. Upload video
       await this.uploadVideo(filepath, container.upload_url);
-
-      // 3. Publish container
-      const mediaId = await this.publishContainer(container.id);
-
-      return mediaId;
+      return await this.publishContainer(container.id);
     } catch (error:any) {
       throw new AppError(500, `Instagram publish failed: ${error.message}`);
     }
@@ -39,7 +42,6 @@ export class InstagramService {
     const videoBuffer = await fs.readFile(filepath);
     const form = new FormData();
     form.append('video', videoBuffer);
-
     await axios.post(uploadUrl, form, {
       headers: form.getHeaders()
     });
